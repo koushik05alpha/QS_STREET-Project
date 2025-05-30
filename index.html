@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QS_STREET Project</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #statusMsg {
+      margin-top: 10px;
+      color: red;
+    }
+    .slider-section {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #333;
+      z-index: 10;
+    }
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slider img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    .arrow {
+      position: absolute;
+      width: 10%;
+      height: 100vh;
+      font-size: 40px;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 20;
+    }
+    .arrow.left { left: 0; }
+    .arrow.right { right: 0; }
+    .info-all {
+      width: 100%;
+      position: absolute;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 30;
+      display: none;
+      grid-template-columns: auto auto;
+    }
+    .info-all h3 { margin: 4px 0; }
+    span { color: yellow; }
+    .info-all.top { top: 0; }
+    .info-all.bottom { bottom: 0; }
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      position: absolute;
+      z-index: 25;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="inputSection">
+    <h2>Select Your File</h2>
+    <input type="file" id="fileInput" accept=".xlsx" />
+    <button onclick="handleFile()">Load Viewer</button>
+    <div id="statusMsg"></div>
+  </div>
+
+  <div class="slider-section" id="sliderSection">
+    <div class="info-all top" id="topInfo">
+      <h3>Row Number - <span id="row-number"></span></h3>
+      <h3>URL last 5 digits - <span id="url-lest-digit"></span></h3>
+      <h3 class="b-row">Column B text - <span id="column-B-data"></span></h3>
+      <h3 class="c-row">Column C text - <span id="column-C-data"></span></h3>
+      <h3 class="d-row">Column D text - <span id="column-D-data"></span></h3>
+      <h3 class="e-row">Column E text - <span id="column-E-data"></span></h3>
+    </div>
+
+    <div class="info-all bottom" id="bottomInfo">
+      <h3>Row Number - <span id="row-number"></span></h3>
+      <h3>URL last 5 digits - <span id="url-lest-digit"></span></h3>
+      <h3 class="b-row">Column B text - <span id="column-B-data"></span></h3>
+      <h3 class="c-row">Column C text - <span id="column-C-data"></span></h3>
+      <h3 class="d-row">Column D text - <span id="column-D-data"></span></h3>
+      <h3 class="e-row">Column E text - <span id="column-E-data"></span></h3>
+    </div>
+
+    <div class="slider">
+      <div class="arrow left" onclick="moveIframe(-1)"></div>
+      <div class="loader" id="loader"></div>
+      <img id="imageViewer" src="" alt="Slide Image">
+      <div class="arrow right" onclick="moveIframe(1)"></div>
+    </div>
+  </div>
+
+  <script>
+    let viewData = [];
+    let currentIndex = 0;
+
+    function handleFile() {
+      const fileInput = document.getElementById("fileInput");
+      const msg = document.getElementById("statusMsg");
+
+      if (!fileInput.files.length) {
+        msg.textContent = "❌ Please select an XLSX file.";
+        return;
+      }
+
+      msg.textContent = "⏳ Reading file...";
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        viewData = [];
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          const a = row[0] || "";
+          if (typeof a === "string" && a.includes("/img_link/view/")) {
+            viewData.push({
+              url: a,
+              row: i + 1,
+              last5: a.slice(-5),
+              b: row[1] || "",
+              c: row[2] || "",
+              d: row[3] || "",
+              e: row[4] || "",
+            });
+          }
+        }
+
+        if (viewData.length === 0) {
+          msg.textContent = "❌ No valid /view/ links found in Column A.";
+          return;
+        }
+
+        msg.textContent = "";
+        showIframeSlider();
+      };
+
+      reader.onerror = function () {
+        msg.textContent = "❌ Error reading file.";
+      };
+
+      reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function showIframeSlider() {
+      currentIndex = 0;
+      document.getElementById("inputSection").style.display = "none";
+      document.getElementById("sliderSection").style.display = "block";
+      updateIframe();
+    }
+
+    function moveIframe(direction) {
+      currentIndex = (currentIndex + direction + viewData.length) % viewData.length;
+      updateIframe();
+
+      const arrow = direction === -1
+        ? document.querySelector(".arrow.left")
+        : document.querySelector(".arrow.right");
+
+      arrow.style.background = "rgba(0, 0, 0, 0.7)";
+      setTimeout(() => {
+        arrow.style.background = "";
+      }, 500);
+    }
+
+    function updateIframe() {
+      const data = viewData[currentIndex];
+      const img = document.getElementById("imageViewer");
+      const loader = document.getElementById("loader");
+
+      loader.style.display = "block";
+      img.style.display = "none";
+
+      const match = data.url.match(/\/view\/([a-f0-9\-]+)/i);
+      if (!match) {
+        img.src = "";
+        loader.style.display = "none";
+        console.error("Invalid view URL:", data.url);
+        return;
+      }
+
+      const imageID = match[1];
+      const finalImageURL = `https://api.blyncsy.io/img_link/image/${imageID}/0`;
+
+      img.onload = () => {
+        loader.style.display = "none";
+        img.style.display = "block";
+      };
+
+      img.onerror = () => {
+        loader.style.display = "none";
+        img.style.display = "block";
+        img.alt = "❌ Failed to load image.";
+      };
+
+      img.src = finalImageURL;
+
+      document.querySelectorAll("#row-number").forEach(el => el.textContent = data.row);
+      document.querySelectorAll("#url-lest-digit").forEach(el => el.textContent = data.last5);
+      document.querySelectorAll("#column-B-data").forEach(el => el.textContent = data.b);
+      document.querySelectorAll("#column-C-data").forEach(el => el.textContent = data.c);
+      document.querySelectorAll("#column-D-data").forEach(el => el.textContent = data.d);
+      document.querySelectorAll("#column-E-data").forEach(el => el.textContent = data.e);
+
+      // Toggle visibility of rows based on empty values
+      toggleRow("b-row", data.b);
+      toggleRow("c-row", data.c);
+      toggleRow("d-row", data.d);
+      toggleRow("e-row", data.e);
+    }
+
+    function toggleRow(className, value) {
+      document.querySelectorAll(`.${className}`).forEach(el => {
+        el.style.display = value ? "block" : "none";
+      });
+    }
+
+    function showTop() {
+      document.getElementById("topInfo").style.display = "grid";
+      document.getElementById("bottomInfo").style.display = "none";
+    }
+
+    function showBottom() {
+      document.getElementById("bottomInfo").style.display = "grid";
+      document.getElementById("topInfo").style.display = "none";
+    }
+
+    function hideTop() {
+      document.getElementById("topInfo").style.display = "none";
+    }
+
+    function hideBottom() {
+      document.getElementById("bottomInfo").style.display = "none";
+    }
+
+    document.addEventListener("keydown", function (e) {
+      const visible = document.getElementById("sliderSection").style.display === "block";
+      if (!visible) return;
+
+      if (e.key === "ArrowLeft") moveIframe(-1);
+      if (e.key === "ArrowRight") moveIframe(1);
+      if (e.key === "ArrowUp") {
+        const top = document.getElementById("topInfo");
+        top.style.display === "grid" ? hideTop() : showTop();
+      }
+      if (e.key === "ArrowDown") {
+        const bottom = document.getElementById("bottomInfo");
+        bottom.style.display === "grid" ? hideBottom() : showBottom();
+      }
+    });
+
+    window.onload = () => {
+      hideTop();
+      hideBottom();
+    };
+  </script>
+</body>
+</html>
