@@ -13,6 +13,12 @@
       font-family: Arial, sans-serif;
     }
     .container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      flex-direction: column;
       max-width: 700px;
       margin: auto;
       padding: 20px;
@@ -110,21 +116,21 @@
 
   <div class="slider-section" id="sliderSection">
     <div class="info-all top" id="topInfo">
-      <h3>Row Number - <span id="row-number"></span></h3>
-      <h3>URL last 5 digits - <span id="url-lest-digit"></span></h3>
-      <h3 class="b-row">Column B text - <span id="column-B-data"></span></h3>
-      <h3 class="c-row">Column C text - <span id="column-C-data"></span></h3>
-      <h3 class="d-row">Column D text - <span id="column-D-data"></span></h3>
-      <h3 class="e-row">Column E text - <span id="column-E-data"></span></h3>
+      <h3>Row Number : <span id="current-row-number"></span> / <span id="total-row-number"></span></h3>
+      <h3>URL last 5 digits : <span id="url-lest-digit"></span></h3>
+      <h3 class="b-row">Column B text : <span id="column-B-data"></span></h3>
+      <h3 class="c-row">Column C text : <span id="column-C-data"></span></h3>
+      <h3 class="d-row">Column D text : <span id="column-D-data"></span></h3>
+      <h3 class="e-row">Column E text : <span id="column-E-data"></span></h3>
     </div>
 
     <div class="info-all bottom" id="bottomInfo">
-      <h3>Row Number - <span id="row-number"></span></h3>
-      <h3>URL last 5 digits - <span id="url-lest-digit"></span></h3>
-      <h3 class="b-row">Column B text - <span id="column-B-data"></span></h3>
-      <h3 class="c-row">Column C text - <span id="column-C-data"></span></h3>
-      <h3 class="d-row">Column D text - <span id="column-D-data"></span></h3>
-      <h3 class="e-row">Column E text - <span id="column-E-data"></span></h3>
+      <h3>Row Number : <span id="current-row-number"></span> / <span id="total-row-number"></span></h3>
+      <h3>URL last 5 digits : <span id="url-lest-digit"></span></h3>
+      <h3 class="b-row">Column B text : <span id="column-B-data"></span></h3>
+      <h3 class="c-row">Column C text : <span id="column-C-data"></span></h3>
+      <h3 class="d-row">Column D text : <span id="column-D-data"></span></h3>
+      <h3 class="e-row">Column E text : <span id="column-E-data"></span></h3>
     </div>
 
     <div class="slider">
@@ -246,14 +252,14 @@
 
       img.src = finalImageURL;
 
-      document.querySelectorAll("#row-number").forEach(el => el.textContent = data.row);
+      document.querySelectorAll("#current-row-number").forEach(el => el.textContent = currentIndex + 1);
+      document.querySelectorAll("#total-row-number").forEach(el => el.textContent = viewData.length);
       document.querySelectorAll("#url-lest-digit").forEach(el => el.textContent = data.last5);
       document.querySelectorAll("#column-B-data").forEach(el => el.textContent = data.b);
       document.querySelectorAll("#column-C-data").forEach(el => el.textContent = data.c);
       document.querySelectorAll("#column-D-data").forEach(el => el.textContent = data.d);
       document.querySelectorAll("#column-E-data").forEach(el => el.textContent = data.e);
 
-      // Toggle visibility of rows based on empty values
       toggleRow("b-row", data.b);
       toggleRow("c-row", data.c);
       toggleRow("d-row", data.d);
